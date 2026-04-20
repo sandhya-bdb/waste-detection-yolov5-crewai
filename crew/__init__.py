@@ -1,0 +1,1 @@
+# WasteGuard CrewAI Package

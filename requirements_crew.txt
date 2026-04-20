@@ -1,0 +1,6 @@
+# WasteGuard Additional Dependencies (CrewAI + WhatsApp)
+# Note: crewai-tools removed — project uses its own custom tools
+crewai==0.63.0
+twilio>=8.0.0
+python-dotenv>=1.0.0
+langchain-groq>=0.1.0
