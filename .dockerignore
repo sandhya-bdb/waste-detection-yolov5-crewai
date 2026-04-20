@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+.github
+
+# Secrets — never bake these into the image
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# YOLOv5 runtime outputs (generated at runtime, not needed in image)
+yolov5/runs/
+yolov5/*.pt
+
+# Downloaded images from Twilio (written at runtime)
+data/inputImage.jpg
+data/*.jpg
+data/*.png
+
+# Local database (written at runtime, use a volume mount in production)
+*.db
+waste_tickets.db
+
+# Dev tools
+*.log
+ngrok
+.DS_Store
+
+# Docs (not needed inside container)
+setup_guide.md
+flowcharts/
+reseach/
