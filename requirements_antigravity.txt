@@ -1,0 +1,3 @@
+# WasteGuard Antigravity Agent Dependencies
+# Google Antigravity SDK — for the Antigravity-powered agent (antigravity_agent.py)
+google-antigravity

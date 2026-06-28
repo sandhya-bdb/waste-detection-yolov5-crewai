@@ -2,10 +2,19 @@
 WasteCrew — Streamlined Pipeline for WasteGuard Society AI
 Bypasses crewai tool-chain complexity for reliable prototype demo.
 Steps: YOLOv5 detect → classify → Groq LLM reply → ticket → WhatsApp alert
+
+Design note: Although agents.py and tasks.py define a full CrewAI crew,
+this WasteCrew class uses a direct Python pipeline instead of CrewAI
+orchestration. This is a deliberate reliability tradeoff:
+  - CrewAI's ReAct loop can stall on tool-call failures at demo time
+  - The direct pipeline is deterministic and easier to debug
+  - All agent roles are still present (each _step maps to one agent's job)
+  - Migrating to full CrewAI orchestration is a documented future step
 """
 import os
 import re
 import json
+import sys
 import glob
 import time
 
@@ -23,6 +32,7 @@ WASTE_CLASS_MAP = {
     6: {"name": "Medical Waste",     "category": "Hazardous Waste", "bin": "Red",    "urgency": "Critical"},
     7: {"name": "Plastic Bag",       "category": "Dry Waste",       "bin": "Yellow", "urgency": "Medium"},
     8: {"name": "Mixed / General",   "category": "General Waste",   "bin": "Grey",   "urgency": "Medium"},
+    39: {"name": "Medical Vial / Syringe", "category": "Hazardous Waste", "bin": "Red", "urgency": "Critical"},
 }
 
 DISPOSAL_TIPS = {
@@ -61,19 +71,27 @@ class WasteCrew:
         print("🟢 " * 20 + "\n")
 
         try:
-            # ── Step 1: YOLOv5 Detection ─────────────────────────────────────
+            # ── Step 1: YOLOv5 Detection ─────────────────────────────────────────
+            # Agent 1 (Waste Detection Specialist) responsibility:
+            # Run the YOLOv5 model on the incoming image and return a structured
+            # JSON with waste_detected, class_ids, and confidence scores.
             print("\n# Agent: Waste Detection Specialist")
             print("## Running YOLOv5 detection...")
             detection = self._run_yolov5(image_path)
             print(f"## Detection result: {json.dumps(detection)}")
 
             # ── Step 2: Classify Waste ────────────────────────────────────────
+            # Agent 2 (Waste Classification Expert) responsibility:
+            # Map the YOLOv5 class_id to a waste category, bin colour, urgency
+            # level, and disposal instructions using a deterministic lookup table.
             print("\n# Agent: Waste Classification Expert")
             print("## Classifying waste...")
             classification = self._classify(detection)
             print(f"## Classification: {json.dumps(classification)}")
 
             # ── Step 3: Create Ticket ─────────────────────────────────────────
+            # Agent 4 (Complaint & Resolution Coordinator) responsibility:
+            # Log every complaint as a traceable ticket so no report is ever lost.
             print("\n# Agent: Complaint & Resolution Coordinator")
             print("## Creating ticket...")
             ticket_id = create_ticket(
@@ -87,12 +105,17 @@ class WasteCrew:
             print(f"## ✅ Ticket #{ticket_id} created")
 
             # ── Step 4: Generate WhatsApp Reply via Groq ──────────────────────
+            # LLM is invoked ONLY here — for natural language generation.
+            # All detection and classification is deterministic (no LLM needed).
             print("\n# Agent: Society Alert & Communication Manager")
             print("## Generating WhatsApp reply via Groq LLM...")
             reply = self._generate_reply(classification, ticket_id, from_number)
             print(f"## Reply generated ({len(reply)} chars)")
 
             # ── Step 5: Send WhatsApp Alerts ──────────────────────────────────
+            # Agent 3 (Alert & Communication Manager) responsibility:
+            # Route alerts to the right people based on urgency level.
+            # Critical/High → Guard + RWA | Medium → Guard only | Low → skip
             self._send_alerts(classification, ticket_id)
 
             print("\n✅  Pipeline finished successfully.")
@@ -126,8 +149,9 @@ class WasteCrew:
         if os.path.exists("yolov5/runs"):
             os.system("rm -rf yolov5/runs")
 
-        # Use the conda env's python explicitly to avoid path issues
-        python_bin = "/opt/anaconda3/envs/waste/bin/python"
+        # Use sys.executable to always run in the current Python environment
+        # (avoids hardcoded conda path that breaks on other machines or Docker)
+        python_bin = sys.executable
         weights = "my_model.pt" if os.path.exists("yolov5/my_model.pt") else "yolov5s.pt"
         cmd = (
             f"cd yolov5/ && {python_bin} run_detect.py "

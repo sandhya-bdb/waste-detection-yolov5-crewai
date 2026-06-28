@@ -1,0 +1,3 @@
+# WasteGuard MCP Server Dependency
+# Model Context Protocol SDK (Anthropic open standard)
+mcp>=1.0.0

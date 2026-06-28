@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteGuard Society AI — RWA Dashboard & Demo Sandbox</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 50%, #1e1b4b 100%);
+            --glass-bg: rgba(17, 24, 39, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #f43f5e;
+            --info: #06b6d4;
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* ── App Layout ────────────────────────────────────────────────────────── */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo-section h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #a78bfa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-section p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .system-badges {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .badge-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 500;
+        }
+
+        .badge-pill.status-active i {
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        /* ── Tab Navigation ────────────────────────────────────────────────────── */
+        .tab-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ── Metric Cards Grid ─────────────────────────────────────────────────── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .metric-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .metric-info h3 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-info p {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .metric-total .metric-icon { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+        .metric-open .metric-icon { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .metric-resolved .metric-icon { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .metric-hazardous .metric-icon { background: rgba(244, 63, 94, 0.15); color: var(--danger); }
+
+        /* ── Panel Styles ──────────────────────────────────────────────────────── */
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(12px);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ── Tickets Table ─────────────────────────────────────────────────────── */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 1rem 1.5rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        /* ── Status and Urgency Badges ────────────────────────────────────────── */
+        .badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            text-transform: capitalize;
+        }
+
+        .badge-urgency-critical { background: rgba(244, 63, 94, 0.15); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
+        .badge-urgency-high { background: rgba(245, 158, 11, 0.15); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-urgency-medium { background: rgba(6, 182, 212, 0.15); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.3); }
+        .badge-urgency-low { background: rgba(156, 163, 175, 0.15); color: #e5e7eb; border: 1px solid rgba(156, 163, 175, 0.3); }
+
+        .status-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .status-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+        }
+
+        /* ── Demo Runner Panel ─────────────────────────────────────────────────── */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .demo-control-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .demo-control-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #818cf8;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .image-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .image-option {
+            border: 2px solid transparent;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            aspect-ratio: 1;
+            transition: all 0.3s ease;
+            background: #111827;
+        }
+
+        .image-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-option:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
+        }
+
+        .image-option.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        .image-option .label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            font-size: 0.7rem;
+            padding: 0.2rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .input-text {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-text:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-run {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: white;
+            border: none;
+            padding: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-run:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-run:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ── Log Console Output ────────────────────────────────────────────────── */
+        .console-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .console {
+            background: #090d16;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 380px;
+            min-height: 250px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .console-line {
+            margin-bottom: 0.5rem;
+            white-space: pre-wrap;
+        }
+
+        .console-line.agent { color: #f472b6; font-weight: bold; }
+        .console-line.success { color: #34d399; }
+        .console-line.error { color: #f87171; }
+        .console-line.info { color: #93c5fd; }
+
+        /* ── WhatsApp Reply Box Mockup ─────────────────────────────────────────── */
+        .whatsapp-mockup {
+            background: #075e54;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-repeat: repeat;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+            margin-top: 1.5rem;
+        }
+
+        .whatsapp-bubble {
+            background: #dcf8c6;
+            color: #303030;
+            padding: 0.8rem;
+            border-radius: 8px;
+            max-width: 85%;
+            margin-left: auto;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            white-space: pre-wrap;
+            position: relative;
+        }
+
+        .whatsapp-bubble::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+            border-left-color: #dcf8c6;
+            border-top-color: #dcf8c6;
+        }
+
+        .whatsapp-header {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ── File Uploader ─────────────────────────────────────────────────────── */
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-input {
+            display: none;
+        }
+
+        .file-upload-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--glass-border);
+            color: var(--text-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-upload-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Header -->
+    <header>
+        <div class="logo-section">
+            <h1><i class="fa-solid fa-recycle"></i> WasteGuard Society AI</h1>
+            <p>Greenview Heights Society Waste Management Panel</p>
+        </div>
+        <div class="system-badges">
+            <div class="badge-pill status-active">
+                <i class="fa-solid fa-circle"></i> Twilio Webhook Live
+            </div>
+            <div class="badge-pill">
+                <i class="fa-solid fa-shield-halved"></i> Security Layers Enabled
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('tab-dashboard')">
+            <i class="fa-solid fa-chart-line"></i> RWA Dashboard
+        </button>
+        <button class="tab-btn" onclick="switchTab('tab-demo')">
+            <i class="fa-solid fa-flask"></i> Interactive Demo Sandbox
+        </button>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TAB 1: RWA DASHBOARD -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="tab-dashboard" class="tab-content active">
+        <!-- Metric Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card metric-total">
+                <div class="metric-info">
+                    <h3>Total Complaints</h3>
+                    <p id="stat-total">0</p>
+                </div>
+                <div class="metric-icon"><i class="fa-solid fa-list-check"></i></div>
+            </div>
+            <div class="metric-card metric-open">
+                <div class="metric-info">
+                    <h3>Open Tickets</h3>
+                    <p id="stat-open">0</p>
+                </div>
+                <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="metric-card metric-resolved">
+                <div class="metric-info">
+                    <h3>Resolved</h3>
+                    <p id="stat-resolved">0</p>
+                </div>
+                <div class="metric-icon"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div class="metric-card metric-hazardous">
+                <div class="metric-info">
+                    <h3>Hazardous Incidents</h3>
+                    <p id="stat-hazardous">0</p>
+                </div>
+                <div class="metric-icon"><i class="fa-solid fa-biohazard"></i></div>
+            </div>
+        </div>
+
+        <!-- Tickets Table Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-ticket"></i> Registered Complaint Tickets</h2>
+                <button class="status-select" onclick="loadDashboardData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>Timestamp</th>
+                            <th>Waste Type</th>
+                            <th>Category</th>
+                            <th>Urgency</th>
+                            <th>Reporter</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tickets-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-secondary);">Loading tickets...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TAB 2: DEMO SANDBOX -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="tab-demo" class="tab-content">
+        <div class="demo-grid">
+            <!-- Sandbox Controls -->
+            <div class="demo-control-card">
+                <h3><i class="fa-solid fa-sliders"></i> Simulation Parameters</h3>
+                
+                <form id="demo-form" onsubmit="runDemo(event)">
+                    <!-- Step 1: Choose Image -->
+                    <div class="form-group">
+                        <label>Select Sample Image (or upload your own)</label>
+                        <div class="image-picker-grid">
+                            <div class="image-option selected" onclick="selectImage('images/user_msg1.jpg', this)">
+                                <img src="/images/user_msg1.jpg" alt="Plastic Bag" onerror="this.src='https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=200&q=80'">
+                                <div class="label">Plastic Bag</div>
+                            </div>
+                            <div class="image-option" onclick="selectImage('images/user_msg2.jpg', this)">
+                                <img src="/images/user_msg2.jpg" alt="Mixed General" onerror="this.src='https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=200&q=80'">
+                                <div class="label">General</div>
+                            </div>
+                            <div class="image-option" onclick="selectImage('data/inputImage.jpg', this)">
+                                <img src="/data/inputImage.jpg" alt="Current Input" onerror="this.src='https://images.unsplash.com/photo-1571721795195-a2ca2d3370a9?auto=format&fit=crop&w=200&q=80'">
+                                <div class="label">Latest Input</div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="custom-image-upload" class="file-upload-input" accept="image/*" onchange="handleImageUpload(this)">
+                            <label for="custom-image-upload" class="file-upload-btn" id="upload-label">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Upload custom waste image</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Reporter Number -->
+                    <div class="form-group">
+                        <label for="reporter-number">Mock WhatsApp Number</label>
+                        <input type="text" id="reporter-number" class="input-text" value="+919876543210" placeholder="+919876543210">
+                    </div>
+
+                    <!-- Run Button -->
+                    <button type="submit" id="run-btn" class="btn-run">
+                        <i class="fa-solid fa-play"></i> Run WasteGuard AI Pipeline
+                    </button>
+                </form>
+
+                <!-- Mock WhatsApp Bubble -->
+                <div class="whatsapp-mockup" id="whatsapp-reply-container" style="display: none;">
+                    <div class="whatsapp-header">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp Delivery (Resident View)
+                    </div>
+                    <div class="whatsapp-bubble" id="whatsapp-reply-bubble">
+                        Report processing...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agent Trace Log Console -->
+            <div class="console-container">
+                <div class="panel-header" style="background: transparent; border: none; padding: 0 0 1rem 0;">
+                    <h3 style="font-size: 1.1rem; color: #f472b6;"><i class="fa-solid fa-terminal"></i> Multi-Agent Execution Log</h3>
+                </div>
+                <div class="console" id="console-output">
+                    <div class="console-line info">WasteGuard Society AI Sandbox loaded and ready.</div>
+                    <div class="console-line info">Select simulation parameters and click "Run" to test the pipeline.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedImagePath = 'images/user_msg1.jpg';
+    let uploadedImageBase64 = null;
+
+    // ── Tab Management ──────────────────────────────────────────────────────
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        if (tabId === 'tab-dashboard') {
+            loadDashboardData();
+        }
+    }
+
+    // ── Image Picker & File Upload ──────────────────────────────────────────
+    function selectImage(path, element) {
+        selectedImagePath = path;
+        uploadedImageBase64 = null;
+        document.querySelectorAll('.image-option').forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        document.getElementById('upload-label').innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>Upload custom waste image</span>';
+    }
+
+    function handleImageUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                uploadedImageBase64 = e.target.result.split(',')[1];
+                document.querySelectorAll('.image-option').forEach(opt => opt.classList.remove('selected'));
+                document.getElementById('upload-label').innerHTML = `<i class="fa-solid fa-check" style="color: var(--success);"></i><span>Selected: ${file.name}</span>`;
+                selectedImagePath = null; // Use uploaded instead
+                
+                logConsole(`Loaded custom file: ${file.name} (${Math.round(file.size / 1024)} KB)`, 'info');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // ── Log Console helpers ─────────────────────────────────────────────────
+    function logConsole(message, type = 'info') {
+        const consoleEl = document.getElementById('console-output');
+        const line = document.createElement('div');
+        line.className = `console-line ${type}`;
+        line.innerText = message;
+        consoleEl.appendChild(line);
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function clearConsole() {
+        document.getElementById('console-output').innerHTML = '';
+    }
+
+    // ── AJAX: Load Dashboard Data ───────────────────────────────────────────
+    function loadDashboardData() {
+        fetch('/api/dashboard')
+            .then(res => res.json())
+            .then(data => {
+                // Update metrics
+                document.getElementById('stat-total').innerText = data.stats.total || 0;
+                document.getElementById('stat-open').innerText = data.stats.open || 0;
+                document.getElementById('stat-resolved').innerText = data.stats.resolved || 0;
+                
+                // Count hazardous
+                let hazardousCount = 0;
+                const hazardousCat = data.stats.by_category.find(c => c.category === 'Hazardous Waste');
+                if (hazardousCat) {
+                    hazardousCount = hazardousCat.count;
+                }
+                document.getElementById('stat-hazardous').innerText = hazardousCount;
+
+                // Update Table
+                const tbody = document.getElementById('tickets-table-body');
+                tbody.innerHTML = '';
+                
+                if (!data.tickets || data.tickets.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">No complaint tickets logged yet.</td></tr>';
+                    return;
+                }
+
+                data.tickets.forEach(t => {
+                    const row = document.createElement('tr');
+                    
+                    const badgeClass = `badge-urgency-${t.urgency.toLowerCase()}`;
+                    
+                    row.innerHTML = `
+                        <td style="font-weight: 600; color: #818cf8;">#${t.id}</td>
+                        <td style="color: var(--text-secondary); font-size: 0.85rem;">${t.timestamp}</td>
+                        <td style="font-weight: 500;">${t.waste_type}</td>
+                        <td>${t.category}</td>
+                        <td><span class="badge ${badgeClass}"><i class="fa-solid fa-circle"></i> ${t.urgency}</span></td>
+                        <td style="font-family: monospace; font-size: 0.85rem;">${t.reported_by}</td>
+                        <td>
+                            <select class="status-select" onchange="updateTicketStatus(${t.id}, this.value)">
+                                <option value="Open" ${t.status === 'Open' ? 'selected' : ''}>Open</option>
+                                <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="Resolved" ${t.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                            </select>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(err => {
+                console.error("Dashboard load error", err);
+                logConsole("Failed to load dashboard data.", "error");
+            });
+    }
+
+    // ── AJAX: Update Ticket Status ──────────────────────────────────────────
+    function updateTicketStatus(id, newStatus) {
+        fetch('/api/update_ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticket_id: id, status: newStatus })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                logConsole(`Ticket #${id} status updated to ${newStatus}.`, 'success');
+                // Refresh dashboard to update counts
+                loadDashboardData();
+            } else {
+                logConsole(`Failed to update ticket #${id} status: ${data.message}`, 'error');
+            }
+        })
+        .catch(err => {
+            console.error("Update ticket error", err);
+            logConsole("Network error during ticket status update.", "error");
+        });
+    }
+
+    // ── AJAX: Run Demo Prediction Pipeline ──────────────────────────────────
+    function runDemo(event) {
+        event.preventDefault();
+        
+        const runBtn = document.getElementById('run-btn');
+        const reporterNum = document.getElementById('reporter-number').value.trim();
+        const replyContainer = document.getElementById('whatsapp-reply-container');
+        const replyBubble = document.getElementById('whatsapp-reply-bubble');
+
+        if (!reporterNum) {
+            alert("Please enter a mock reporter number.");
+            return;
+        }
+
+        // Disable run button and set loading spinner
+        runBtn.disabled = true;
+        runBtn.innerHTML = '<span class="spinner"></span> Running Agents...';
+        replyContainer.style.display = 'none';
+
+        clearConsole();
+        logConsole("🚀 Triggering WasteGuard Society AI Multi-Agent pipeline...", "info");
+        logConsole(`📱 Reporter: ${reporterNum}`, "info");
+
+        // Simulate agent steps in the console to show the user the flow in real-time
+        setTimeout(() => logConsole("🤖 [Agent 1: Waste Detection Specialist] Analyzing image with YOLOv5...", "agent"), 800);
+        setTimeout(() => logConsole("🤖 [Agent 2: Waste Classification Expert] Processing detection bounding boxes...", "agent"), 2000);
+        setTimeout(() => logConsole("🤖 [Agent 3: Alert & Communication Manager] Applying alert routing rules...", "agent"), 3500);
+        setTimeout(() => logConsole("🤖 [Agent 4: Complaint Coordinator] Registering ticket into SQLite...", "agent"), 4800);
+        setTimeout(() => logConsole("🤖 [Agent 4: Complaint Coordinator] Invoking Groq LLM for WhatsApp reply generation...", "agent"), 6000);
+
+        fetch('/api/demo_predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                image_path: selectedImagePath,
+                image_base64: uploadedImageBase64,
+                from_number: reporterNum
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run WasteGuard AI Pipeline';
+
+            if (data.success) {
+                // Clear simulated slow logs and output the actual results
+                logConsole(`\n🟢 YOLOv5 Detection Result: ${JSON.stringify(data.pipeline_output.detections || [])}`, 'success');
+                logConsole(`🟢 Classification: Urgency = ${data.pipeline_output.classification.urgency}, Bin = ${data.pipeline_output.classification.bin}`, 'success');
+                logConsole(`🟢 Ticket Created: Ticket ID = #${data.pipeline_output.ticket_id}`, 'success');
+                logConsole(`🟢 WhatsApp Alerts: ${JSON.stringify(data.pipeline_output.alerts)}`, 'success');
+                logConsole("🟢 Pipeline execution complete. WhatsApp delivery simulation generated.", 'success');
+                
+                // Show WhatsApp bubble mockup
+                replyContainer.style.display = 'block';
+                replyBubble.innerText = data.pipeline_output.reply_message;
+            } else {
+                logConsole(`❌ Pipeline failed: ${data.message}`, 'error');
+            }
+        })
+        .catch(err => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run WasteGuard AI Pipeline';
+            console.error("Demo run error", err);
+            logConsole("Network error while running the agent pipeline.", "error");
+        });
+    }
+
+    // Initial load
+    window.onload = function() {
+        loadDashboardData();
+    };
+</script>
+
+</body>
+</html>

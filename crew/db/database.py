@@ -30,7 +30,7 @@ def init_db():
     """)
     conn.commit()
     conn.close()
-    print("✅ Database initialized.")
+    # print("✅ Database initialized.")
 
 
 def create_ticket(waste_type: str, category: str, urgency: str,
@@ -87,17 +87,31 @@ def get_ticket(ticket_id: int) -> dict:
     return dict(row) if row else {}
 
 
-def get_stats() -> dict:
-    """Return aggregate stats for the RWA dashboard."""
+def get_stats(time_range: str = "all") -> dict:
+    """Return aggregate stats for the RWA dashboard. time_range can be '24h', '7d', or 'all'."""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM tickets")
+
+    where_clause = ""
+    if time_range == "24h":
+        where_clause = "WHERE timestamp >= datetime('now', '-1 day')"
+    elif time_range == "7d":
+        where_clause = "WHERE timestamp >= datetime('now', '-7 days')"
+        
+    and_clause = ""
+    if where_clause:
+        and_clause = f"AND {where_clause[6:]}"
+
+    cursor.execute(f"SELECT COUNT(*) FROM tickets {where_clause}")
     total = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM tickets WHERE status='Open'")
+
+    cursor.execute(f"SELECT COUNT(*) FROM tickets WHERE status='Open' {and_clause}")
     open_count = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM tickets WHERE status='Resolved'")
+
+    cursor.execute(f"SELECT COUNT(*) FROM tickets WHERE status='Resolved' {and_clause}")
     resolved_count = cursor.fetchone()[0]
-    cursor.execute("SELECT category, COUNT(*) as cnt FROM tickets GROUP BY category ORDER BY cnt DESC")
+
+    cursor.execute(f"SELECT category, COUNT(*) as cnt FROM tickets {where_clause} GROUP BY category ORDER BY cnt DESC")
     by_category = [{"category": r[0], "count": r[1]} for r in cursor.fetchall()]
     conn.close()
     return {

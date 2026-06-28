@@ -2,6 +2,16 @@
 CrewAI Agents for WasteGuard Society AI
 All 4 agents: Detector, Classifier, Alert, TicketManager
 LLM: Groq via OpenAI-compatible endpoint
+
+Architecture Note:
+  These agent and task definitions represent the FULL CrewAI orchestration design
+  for WasteGuard. In the current prototype, waste_crew.py uses a direct Python
+  pipeline instead of invoking Crew.kickoff(), because:
+    1. CrewAI's ReAct agent loop can stall on tool-call parse failures at demo time
+    2. The direct pipeline gives deterministic, predictable output for demos
+  These agent definitions remain as the intended production architecture.
+  Switching to full CrewAI orchestration is a documented next step.
+LLM: Groq via OpenAI-compatible endpoint
 """
 import os
 from crewai import Agent

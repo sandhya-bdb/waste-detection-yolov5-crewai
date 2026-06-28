@@ -1,0 +1,3 @@
+"""
+WasteGuard MCP Server
+"""
