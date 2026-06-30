@@ -145,55 +145,85 @@ class WasteCrew:
 
     # ─────────────────────────────────────────────────────────────────────────
     def _run_yolov5(self, image_path: str) -> dict:
-        """Run YOLOv5 detection and return structured result."""
-        if os.path.exists("yolov5/runs"):
-            os.system("rm -rf yolov5/runs")
-
-        # Use sys.executable to always run in the current Python environment
-        # (avoids hardcoded conda path that breaks on other machines or Docker)
-        python_bin = sys.executable
-        weights = "my_model.pt" if os.path.exists("yolov5/my_model.pt") else "yolov5s.pt"
-        cmd = (
-            f"cd yolov5/ && {python_bin} run_detect.py "
-            f"--weights {weights} "
-            f"--img 416 --conf 0.5 "
-            f"--source ../{image_path} "
-            f"--save-txt --save-conf 2>&1"
-        )
-        ret = os.system(cmd)
-
-        output_dirs = sorted(glob.glob("yolov5/runs/detect/exp*"))
-        if not output_dirs:
-            # YOLOv5 failed (likely ultralytics version mismatch)
-            # Return a simulated detection so pipeline continues for demo
-            print("## ⚠️  YOLOv5 unavailable — using simulated detection for demo")
+        """Run YOLOv5 detection OR Gemini Vision if custom model is missing."""
+        
+        # If custom model exists, use YOLOv5
+        if os.path.exists("yolov5/my_model.pt"):
+            if os.path.exists("yolov5/runs"):
+                os.system("rm -rf yolov5/runs")
+            python_bin = sys.executable
+            cmd = (
+                f"cd yolov5/ && {python_bin} run_detect.py "
+                f"--weights my_model.pt "
+                f"--img 416 --conf 0.5 "
+                f"--source ../{image_path} "
+                f"--save-txt --save-conf 2>&1"
+            )
+            os.system(cmd)
+            
+            output_dirs = sorted(glob.glob("yolov5/runs/detect/exp*"))
+            if not output_dirs:
+                return {"waste_detected": False, "num_detections": 0, "detections": [], "message": "No detections."}
+            
+            latest_dir  = output_dirs[-1]
+            detections  = []
+            label_files = glob.glob(f"{latest_dir}/labels/*.txt")
+            if label_files:
+                with open(label_files[0]) as f:
+                    for line in f:
+                        parts = line.strip().split()
+                        if len(parts) >= 5:
+                            class_id   = int(parts[0])
+                            confidence = float(parts[5]) if len(parts) > 5 else 0.75
+                            detections.append({"class_id": class_id, "confidence": round(confidence, 2)})
+            
+            return {
+                "waste_detected":    len(detections) > 0,
+                "num_detections":    len(detections),
+                "detections":        detections,
+                "message": f"Found {len(detections)} waste item(s)." if detections else "No waste detected.",
+            }
+            
+        # ── UPGRADE: Gemini Vision Fallback (when custom YOLO model is missing) ──
+        print("## 🧠 Custom YOLO model missing. Engaging Gemini Vision for high-accuracy detection...")
+        import google.generativeai as genai
+        import PIL.Image
+        
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        try:
+            img = PIL.Image.open(image_path)
+            prompt = """
+            Analyze this image of waste. Which of the following categories best describes it?
+            0: Plastic Bottle
+            1: Food / Organic
+            2: Paper / Cardboard
+            3: Glass Bottle
+            4: Metal Can (or Aerosol/Spray Can)
+            5: E-Waste
+            6: Medical Waste (Syringes, bloody items, bandages)
+            7: Plastic Bag
+            8: Mixed / General
+            39: Medical Vial / Syringe
+            
+            Respond ONLY with a JSON object in this exact format:
+            {"class_id": 6, "confidence": 0.95}
+            Do not include markdown blocks or any other text.
+            """
+            response = model.generate_content([prompt, img])
+            text = response.text.strip().replace('```json', '').replace('```', '')
+            data = json.loads(text)
+            
             return {
                 "waste_detected": True,
                 "num_detections": 1,
-                "detections": [{"class_id": 7, "confidence": 0.82}],
-                "message": "Simulated: Plastic Bag detected (demo mode — YOLOv5 model loading issue).",
-                "simulated": True,
+                "detections": [data],
+                "message": "Gemini Vision successfully analyzed the waste."
             }
-
-
-        latest_dir  = output_dirs[-1]
-        detections  = []
-        label_files = glob.glob(f"{latest_dir}/labels/*.txt")
-        if label_files:
-            with open(label_files[0]) as f:
-                for line in f:
-                    parts = line.strip().split()
-                    if len(parts) >= 5:
-                        class_id   = int(parts[0])
-                        confidence = float(parts[5]) if len(parts) > 5 else 0.75
-                        detections.append({"class_id": class_id, "confidence": round(confidence, 2)})
-
-        return {
-            "waste_detected":    len(detections) > 0,
-            "num_detections":    len(detections),
-            "detections":        detections,
-            "message": f"Found {len(detections)} waste item(s)." if detections else "No waste detected.",
-        }
+        except Exception as e:
+            print(f"Gemini Vision error: {e}")
+            return {"waste_detected": False, "num_detections": 0, "detections": [], "message": str(e)}
 
     # ─────────────────────────────────────────────────────────────────────────
     def _classify(self, detection: dict) -> dict:
