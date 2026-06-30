@@ -48,8 +48,8 @@ graph TD
 ### 🧠 Dual-Agent Architecture Breakdown
 This system uniquely leverages two distinct agentic paradigms, sharing a unified toolset:
 
-1. **The "Eyes" (YOLOv5 & OpenCV)**
-   Acts as the foundational sensory layer. It processes pixel data to output bounding box coordinates, confidence scores, and class integers. It possesses no agentic reasoning.
+1. **The "Eyes" (YOLOv5 & Gemini Vision)**
+   Acts as the foundational sensory layer. It processes pixel data to output bounding box coordinates and class integers. When custom YOLO models are missing, it gracefully falls back to **Gemini Vision (Multimodal AI)** for high-accuracy zero-shot classification of complex objects (e.g. distinguishing medical vs hazardous waste).
 2. **The "Specialized Workers" (CrewAI Pipeline)**
    A deterministic, sequential assembly line of specialized agents triggered asynchronously by Twilio webhooks. The *Detection Agent*, *Classification Agent*, and *Ticket Manager* pass structured context sequentially to fulfill the WhatsApp user's request without human-in-the-loop (HITL) intervention.
 3. **The "Manager" (Google Antigravity Agent)**

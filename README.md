@@ -23,9 +23,9 @@ This project was built for the **AI Agents: Intensive Vibe Coding Capstone** by 
 
 Send a **photo of waste** to a WhatsApp number, and within 30 seconds:
 
-1. **YOLOv5** detects whether waste is present and what type
+1. **YOLOv5 + Gemini Vision** detects whether waste is present and what type
 2. A **Classifier Agent** maps it to a category (Dry / Wet / Hazardous / General)
-3. A **Ticket Manager** creates a traceable complaint in the SQLite database
+3. A **Ticket Manager** creates a traceable complaint in the SQLite database (Viewable on the **Web Dashboard** at `/dashboard`)
 4. **Groq LLM (llama-3.3-70b)** generates a contextual, friendly WhatsApp reply
 5. **Twilio** sends the reply to the resident + an alert to the RWA/Guard
 
@@ -88,7 +88,7 @@ Resident (WhatsApp Photo)
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Object Detection | YOLOv5 (Ultralytics) | Identify waste type from image |
+| Object Detection | YOLOv5 + Gemini Vision | Identify waste type from image (with Multimodal fallback) |
 | Agent Orchestration | CrewAI 0.63 | Define 4 specialized agents |
 | LLM | Groq — `llama-3.3-70b-versatile` | Natural language reply generation |
 | WhatsApp | Twilio Sandbox API | Resident & guard messaging |
