@@ -46,7 +46,7 @@ def predictRoute():
         image = request.json['image']
         decodeImage(image, clApp.filename)
 
-        os.system("cd yolov5/ && python detect.py --weights my_model.pt --img 416 --conf 0.5 --source ../data/inputImage.jpg")
+        os.system("cd yolov5/ && python detect.py --weights yolov5s.pt --img 416 --conf 0.5 --source ../data/inputImage.jpg")
 
         opencodedbase64 = encodeImageIntoBase64("yolov5/runs/detect/exp/inputImage.jpg")
         result = {"image": opencodedbase64.decode('utf-8')}
@@ -69,7 +69,7 @@ def predictRoute():
 @cross_origin()
 def predictLive():
     try:
-        os.system("cd yolov5/ && python detect.py --weights my_model.pt --img 416 --conf 0.5 --source 0")
+        os.system("cd yolov5/ && python detect.py --weights yolov5s.pt --img 416 --conf 0.5 --source 0")
         os.system("rm -rf yolov5/runs")
         return "Camera starting!!" 
 
@@ -217,9 +217,8 @@ def whatsapp_webhook():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 @app.route("/dashboard")
 def dashboard():
-    """Renders the HTML Dashboard/Sandbox for the RWA & judges."""
+    """Web interface for monitoring WasteGuard AI pipeline"""
     return render_template("dashboard.html")
-
 
 @app.route("/api/dashboard")
 def api_dashboard():
@@ -278,6 +277,23 @@ def api_demo_predict():
             ticket_id = result.get("ticket_id", 0)
             ticket_info = get_ticket(ticket_id) if ticket_id else {}
             
+            # --- NEW: Actually send the WhatsApp message to the provided phone number ---
+            account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+            auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+            if account_sid and auth_token and from_number:
+                try:
+                    from twilio.rest import Client
+                    client = Client(account_sid, auth_token)
+                    client.messages.create(
+                        from_=os.getenv("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886"),
+                        to=f"whatsapp:{from_number}" if not from_number.startswith("whatsapp:") else from_number,
+                        body=result.get("reply_message")
+                    )
+                    print(f"✅ Sent demo WhatsApp reply to {from_number}")
+                except Exception as e:
+                    print(f"⚠️ Could not send Twilio message to {from_number}: {e}")
+            # --------------------------------------------------------------------------
+
             # Form simulated alerts response details
             urgency = ticket_info.get("urgency", "Low")
             alerts = []
